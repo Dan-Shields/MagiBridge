@@ -7,10 +7,8 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.profile.GameProfileManager;
 import org.spongepowered.api.service.whitelist.WhitelistService;
-import java.util.concurrent.CompletableFuture;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
