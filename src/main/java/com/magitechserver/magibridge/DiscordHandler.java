@@ -7,6 +7,10 @@ import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.profile.GameProfile;
+import org.spongepowered.api.profile.GameProfileManager;
+import org.spongepowered.api.service.whitelist.WhitelistService;
+import java.util.concurrent.CompletableFuture;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -165,6 +169,52 @@ public class DiscordHandler {
             sendMessageToChannel(c.getId(), msg, 10);
         } else {
             sendMessageToChannel(c.getId(), msg);
+        }
+    }
+
+    public static void dispatchWhitelist(Message m, MessageChannel c, String command) {
+        String ign = m.getContentDisplay().replace(MagiBridge.getConfig().CHANNELS.WHITELIST_COMMAND, "").trim();
+
+        if (ign == null || ign.isEmpty()) {
+            // no name specified
+            returnWhitelistMessage("**Correct command usage is **`" + command + " <mc name>`.", m, c);
+            return;
+        }
+        
+        Optional<WhitelistService> service = Sponge.getServiceManager().provide(WhitelistService.class);
+        WhitelistService whitelist;
+        
+        if (service.isPresent()) {
+            whitelist = service.get();
+        } else {
+            // whitelist not available
+            returnWhitelistMessage("**Error retreiving whitelist!**", m, c);
+            return;
+        }
+
+        GameProfileManager profileManager = Sponge.getServer().getGameProfileManager();
+
+        profileManager.get(ign).thenAccept(profile -> {
+            if (whitelist.addProfile(profile)) {
+                returnWhitelistMessage("**'" + profile.getName().get() + "' was already on the whitelist!**", m, c);
+            } else {
+                String name = profile.getName().get();
+                MagiBridge.getLogger().info("'" + name + "' added to whitelist");
+                returnWhitelistMessage("**'" + name + "' successfully added to whitelist!**", m, c);
+            }
+        });
+    }
+
+    private static void returnWhitelistMessage(String msg, Message m, MessageChannel c) {
+        if (msg != null && msg != "") {
+            boolean shouldDelete = MagiBridge.getConfig().CHANNELS.DELETE_WHITELIST;
+
+            if (shouldDelete) {
+                m.delete().queueAfter(10, TimeUnit.SECONDS);
+                sendMessageToChannel(c.getId(), msg, 10);
+            } else {
+                sendMessageToChannel(c.getId(), msg);
+            }
         }
     }
 

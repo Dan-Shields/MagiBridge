@@ -8,6 +8,10 @@
 out
 gen### Gradle template
 /build/
+/bin/
+.classpath
+.project
+/.settings/
 
 # Ignore Gradle GUI config
 gradle-app.setting

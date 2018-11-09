@@ -22,6 +22,10 @@ public class Channel {
     public String LIST_COMMAND = "!online";
     @Setting(value = "delete-list-message", comment = "Should MagiBridge delete the player list message?")
     public boolean DELETE_LIST = true;
+    @Setting(value = "player-whitelist-command", comment = "Discord command that adds a player to the whitelist")
+    public String WHITELIST_COMMAND = "!whitelist";
+    @Setting(value = "delete-whitelist-message", comment = "Should MagiBridge delete the whitelist message?")
+    public boolean DELETE_WHITELIST = true;
     @Setting(value = "console-command", comment = "Discord command that executes server console commands")
     public String CONSOLE_COMMAND = "!cmd";
     @Setting(value = "commands-role-override", comment = "If a command is defined here, it will ONLY run if the user has the defined role.\n" +

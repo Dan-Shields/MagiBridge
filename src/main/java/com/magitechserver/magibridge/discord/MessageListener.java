@@ -80,6 +80,12 @@ public class MessageListener extends ListenerAdapter {
             return;
         }
 
+        // Handle whitelist command
+        if (message.startsWith(MagiBridge.getConfig().CHANNELS.WHITELIST_COMMAND) && isListenableChannel(channelID)) {
+            DiscordHandler.dispatchWhitelist(e.getMessage(), e.getChannel(), MagiBridge.getConfig().CHANNELS.WHITELIST_COMMAND);
+            return;
+        }
+
         // UltimateChat hook active
         if (MagiBridge.getConfig().CHANNELS.USE_UCHAT && !MagiBridge.getConfig().CHANNELS.USE_NUCLEUS) {
             String chatChannel = MagiBridge.getConfig().CHANNELS.UCHAT.UCHAT_CHANNELS.get(channelID);
