@@ -28,7 +28,7 @@ public class SpongeLoginListener {
         }
 
         if (p.hasPermission("magibridge.silentjoin")) {
-            MagiBridge.getLogger().warn("The player " + p.getName() + " has the magibridge.silentjoin permission, not sending quit message!");
+            MagiBridge.getLogger().warn("The player " + p.getName() + " has the magibridge.silentjoin permission, not sending join message!");
             return;
         }
 
