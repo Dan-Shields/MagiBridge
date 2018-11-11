@@ -75,7 +75,12 @@ public class SpongeChatListener {
             Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%prefix%", p.getOption("prefix").orElse(""));
             placeholders.put("%player%", p.getName());
-            placeholders.put("%message%", e.getFormatter().getBody().toText().toPlain());
+
+            // This is disgusting (but works combined with my changes to eagle factions)
+            String message = e.getFormatter().getBody().toText().toPlain();
+            String prefix = message.split(":")[0] + ":";
+
+            placeholders.put("%message%", message.replace(prefix, ""));
             placeholders.put("%topgroup%", GroupUtil.getHighestGroup(p));
             placeholders.put("%nick%", NucleusHandler.getNick(p));
             boolean removeEveryone = !p.hasPermission("magibridge.everyone");

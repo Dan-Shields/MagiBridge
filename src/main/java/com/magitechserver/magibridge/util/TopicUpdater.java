@@ -27,12 +27,10 @@ public class TopicUpdater extends Thread {
                         .replace("%minutesonline%", Long.valueOf((ManagementFactory.getRuntimeMXBean().getUptime() / (60 * 1000)) % 60).toString());
 
                 try {
-
                     if (MagiBridge.jda.getTextChannelById(MagiBridge.getConfig().CHANNELS.MAIN_CHANNEL) == null) {
                         MagiBridge.getLogger().error("The main-discord-channel is INVALID, replace it with a valid one and restart the server!");
                         continue;
                     }
-
                     MagiBridge.jda.getTextChannelById(MagiBridge.getConfig().CHANNELS.MAIN_CHANNEL).getManager().setTopic(topic).queue();
 
                 } catch (NullPointerException e) {
