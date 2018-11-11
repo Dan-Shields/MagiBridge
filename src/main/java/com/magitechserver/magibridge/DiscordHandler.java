@@ -9,6 +9,13 @@ import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.profile.GameProfileManager;
 import org.spongepowered.api.service.whitelist.WhitelistService;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.service.user.UserStorageService;
+
+
+import io.github.nucleuspowered.nucleus.api.exceptions.NicknameException;
+import io.github.nucleuspowered.nucleus.api.service.NucleusNicknameService;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -77,7 +84,7 @@ public class DiscordHandler {
         List<String> usersMentioned = new ArrayList<>();
         Arrays.stream(message.split(" ")).filter(word ->
                 word.startsWith("@")).forEach(usersMentioned::add);
-
+        
         if (!usersMentioned.isEmpty() && withMentions) {
             for (String mention : usersMentioned) {
                 List<Member> users = new ArrayList<>();
@@ -179,14 +186,46 @@ public class DiscordHandler {
             return;
         }
         
-        Optional<WhitelistService> service = Sponge.getServiceManager().provide(WhitelistService.class);
+        Optional<WhitelistService> whitelistClass = Sponge.getServiceManager().provide(WhitelistService.class);
         WhitelistService whitelist;
         
-        if (service.isPresent()) {
-            whitelist = service.get();
+        if (whitelistClass.isPresent()) {
+            whitelist = whitelistClass.get();
         } else {
             // whitelist not available
             returnWhitelistMessage("**Error retreiving whitelist!**", m, c);
+            return;
+        }
+
+        Optional<UserStorageService> userStorageClass;
+        UserStorageService userStorage;
+
+        Optional<NucleusNicknameService> nicknameClass;
+        NucleusNicknameService nicknameService;
+
+        if (Sponge.getPluginManager().getPlugin("nucleus").isPresent()) {
+            // If nucleus is present, fetch nickname service
+            userStorageClass = Sponge.getServiceManager().provide(UserStorageService.class);
+            
+            if (userStorageClass.isPresent()) {
+                userStorage = userStorageClass.get();
+            } else {
+                // whitelist not available
+                returnWhitelistMessage("**Error retreiving user database!**", m, c);
+                return;
+            }
+
+            nicknameClass = Sponge.getServiceManager().provide(NucleusNicknameService.class);
+
+            if (nicknameClass.isPresent()) {
+                nicknameService = nicknameClass.get();
+            } else {
+                // whitelist not available
+                returnWhitelistMessage("**Error accessing nickname service!**", m, c);
+                return;
+            }
+        } else {
+            returnWhitelistMessage("**Error accessing Nucleus for the nickname service!**", m, c);
             return;
         }
 
@@ -197,8 +236,36 @@ public class DiscordHandler {
                 returnWhitelistMessage("**'" + profile.getName().get() + "' was already on the whitelist!**", m, c);
             } else {
                 String name = profile.getName().get();
-                MagiBridge.getLogger().info("'" + name + "' added to whitelist");
-                returnWhitelistMessage("**'" + name + "' successfully added to whitelist!**", m, c);
+                String nick = m.getAuthor().getName().replace(" ", "_").replaceAll("[^a-zA-Z0-9_]+", "");
+
+                Text.Builder nickTextBuilder = Text.builder(nick);
+
+                org.spongepowered.api.entity.living.player.User user = userStorage.getOrCreate(profile);
+
+                MagiBridge.getLogger().info("user name: " + user.getName());
+
+                Task.Builder taskBuilder = Task.builder();
+
+                taskBuilder.execute(
+                    () -> {
+                        try {
+                            MagiBridge.getLogger().info("attempting to set nick: " + nick);
+                            nicknameService.setNickname(user, nickTextBuilder.build(), true);
+        
+                        } catch (NicknameException e) {
+                            MagiBridge.getLogger().info("Adding nick failed with NicknameException");
+                            returnWhitelistMessage("**Error when trying to set nickname!** You were added to the whitelist, but please contact someone to get your nick updated.", m, c);
+                        } catch (Exception e) {
+                            String errorMessage = e.getMessage();
+                            MagiBridge.getLogger().info("Adding nick failed with generic Exception: " + errorMessage);
+                            returnWhitelistMessage("**Error when trying to set nickname!** You were added to the whitelist, but please contact someone to get your nick updated.", m, c);
+                        }
+
+                        MagiBridge.getLogger().info("'" + name + "' added to whitelist");
+                        returnWhitelistMessage("**" + name + "** successfully added to whitelist and given nickname '**" + nick + "**'", m, c);
+                    }
+                ).submit(Sponge.getPluginManager().getPlugin("magibridge").get());
+
             }
         });
     }
